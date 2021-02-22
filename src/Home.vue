@@ -3,11 +3,15 @@
     <div class="header">solarhash</div>
     <div class="container">
       <div>
-        <input type="text" v-model="hash" v-on:change="hashChanged" />
-        <button v-on:click="generateHash">Generate Hash</button>
+        <input style="width: 500px" type="text" v-model="hash" @input="hashChanged" />
+        <div>
+          <button v-on:click="generateShortHash">Generate Hash</button>
+          <button v-on:click="generateLongHash">Generate Long Hash</button>
+        </div>
       </div>
       <div style="font-family: monospace">
-        <p style="white-space:pre-wrap">{{ hashart }}</p>
+        <p style="white-space:pre-wrap; ; font-size: 20px">{{ hashart }}</p>
+        <p>{{ info }}<span v-if="showWarning" style="color: red"> !! Art is not unique</span></p>
       </div>
     </div>
   </div>
@@ -28,23 +32,36 @@ import solarhash from 'solarhash'
 export default class Home extends Vue {
   hash = ''
   hashart = ''
+  info = ''
+  showWarning = false
 
   hashChanged() {
-    console.log('updated!', this.hash)
     this.updateArt()
   }
 
-  generateHash() {
+  generateShortHash() {
+    this.hash = this.generateHash(20)
+    this.updateArt()
+  }
+
+  generateLongHash() {
+    this.hash = this.generateHash(32)
+    this.updateArt()
+  }
+
+  generateHash(bytes) {
     let hash = '0x'
-    for (let x = 0; x < 40; x++) {
+    for (let x = 0; x < bytes*2; x++) {
       hash += (Math.floor(Math.random() * 16)).toString(16)
     }
-    this.hash = hash
-    this.updateArt()
+    return hash
   }
 
   updateArt() {
-    this.hashart = solarhash(this.hash)
+    const { art, bitsConsumed, bits } = solarhash(this.hash)
+    this.hashart = art
+    this.info = `Used ${bitsConsumed} of ${bits} bits`
+    this.showWarning = bitsConsumed < bits
   }
 
   async serverPrefetch() {
